@@ -23,6 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IContactService, ContactService>();
+        services.AddScoped<IGroupService, GroupService>();
+        services.AddScoped<IMessageService, MessageService>();
 
         return services;
     }

@@ -1,7 +1,13 @@
 @baseUrl = http://localhost:8080
-@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0dXNlcjIiLCJqdGkiOiI1Nzg2Y2RjNS1iMjg5LTRhZjItOGMwMy01ZTE4YzllMzhiMmUiLCJpYXQiOjE3NDg2Nzg2NzAsImV4cCI6MTc0ODc2NTA3MCwiaXNzIjoiTXlDaGF0IiwiYXVkIjoiTXlDaGF0In0.ZMDRekH9Rzn1NkT8_5ivm9SMmKMIoZKqPECCwzgzVa4
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJ0ZXN0dXNlcjEiLCJqdGkiOiI4ODU5OGIxZS04NTc2LTRmNDUtYmNjMy0xYWRjOWY0NDQzMjgiLCJpYXQiOjE3NDg2ODA5MjQsImV4cCI6MTc0ODc2NzMyNCwiaXNzIjoiTXlDaGF0IiwiYXVkIjoiTXlDaGF0In0.L0YN_6dB7KZO7VfT6VbS22-8MtFKUhCFGwTEIpKaJm4
+@user2Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0dXNlcjIiLCJqdGkiOiI1ZmE5NTA4NC03MDE4LTQyNDgtYWM0Ny02N2M2ZTJkYjY1OGQiLCJpYXQiOjE3NDg2ODA5ODQsImV4cCI6MTc0ODc2NzM4NCwiaXNzIjoiTXlDaGF0IiwiYXVkIjoiTXlDaGF0In0.z6cfz2immVPlZt_fxcn3zbpsJ_2mhL4XtCCI_hvykwQ
+@user3Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzIiwidW5pcXVlX25hbWUiOiJ0ZXN0dXNlcjMiLCJqdGkiOiJjYTMzY2MyNy1mNGU2LTRjZDEtOTIwYi1mYzBmY2M1NzljYjEiLCJpYXQiOjE3NDg2ODA5OTMsImV4cCI6MTc0ODc2NzM5MywiaXNzIjoiTXlDaGF0IiwiYXVkIjoiTXlDaGF0In0.5yYCdjHPfWMYSVd9jQlCOASCC2BDPKX-n7cJiHkTNoU
 
-### Register a new user
+### ========================================
+### AUTHENTICATION TESTS
+### ========================================
+
+### Register User 1
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -11,7 +17,7 @@ Content-Type: application/json
   "confirmPassword": "Password123!"
 }
 
-### Register another user for testing contacts
+### Register User 2
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json
 
@@ -21,7 +27,26 @@ Content-Type: application/json
   "confirmPassword": "Password123!"
 }
 
-### Login
+### Register User 3
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser3",
+  "password": "Password123!",
+  "confirmPassword": "Password123!"
+}
+
+### Login User 1
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser1",
+  "password": "Password123!"
+}
+
+### Login User 2
 POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
@@ -30,10 +55,26 @@ Content-Type: application/json
   "password": "Password123!"
 }
 
-### Check username availability
-GET {{baseUrl}}/api/auth/check-username/testuser3
+### Login User 3
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
 
-### Send contact invitation
+{
+  "username": "testuser3",
+  "password": "Password123!"
+}
+
+### Check username availability
+GET {{baseUrl}}/api/auth/check-username/testuser4
+
+### Check existing username
+GET {{baseUrl}}/api/auth/check-username/testuser1
+
+### ========================================
+### CONTACT MANAGEMENT TESTS
+### ========================================
+
+### Send contact invitation (User 1 to User 2)
 POST {{baseUrl}}/api/contacts/invite
 Authorization: Bearer {{accessToken}}
 Content-Type: application/json
@@ -43,35 +84,455 @@ Content-Type: application/json
   "message": "Let's be contacts!"
 }
 
-### Get contacts list
-GET {{baseUrl}}/api/contacts
+### Send contact invitation (User 1 to User 3)
+POST {{baseUrl}}/api/contacts/invite
 Authorization: Bearer {{accessToken}}
+Content-Type: application/json
 
-### Get pending invitations (received)
+{
+  "username": "testuser3",
+  "message": "Want to connect?"
+}
+
+### Get pending invitations (User 2 should see invitation from User 1)
 GET {{baseUrl}}/api/contacts/invitations
-Authorization: Bearer {{accessToken}}
+Authorization: Bearer {{user2Token}}
 
-### Get sent invitations
+### Get sent invitations (User 1 should see sent invitations)
 GET {{baseUrl}}/api/contacts/invitations/sent
 Authorization: Bearer {{accessToken}}
 
-### Accept invitation (replace {invitationId} with actual ID)
+### Accept invitation (User 2 accepts from User 1)
 PUT {{baseUrl}}/api/contacts/invitation/1/respond
-Authorization: Bearer {{accessToken}}
+Authorization: Bearer {{user2Token}}
 Content-Type: application/json
 
 {
   "accept": true
 }
 
+### Reject invitation (User 3 rejects from User 1)
+PUT {{baseUrl}}/api/contacts/invitation/2/respond
+Authorization: Bearer {{user3Token}}
+Content-Type: application/json
+
+{
+  "accept": false
+}
+
+### Get contacts list (User 1)
+GET {{baseUrl}}/api/contacts
+Authorization: Bearer {{accessToken}}
+
+### Get contacts list (User 2)
+GET {{baseUrl}}/api/contacts
+Authorization: Bearer {{user2Token}}
+
 ### Search users
 GET {{baseUrl}}/api/contacts/search?query=test
 Authorization: Bearer {{accessToken}}
 
-### Remove contact (replace {contactId} with actual ID)
+### Search specific user
+GET {{baseUrl}}/api/contacts/search?query=testuser2
+Authorization: Bearer {{accessToken}}
+
+### Block contact
+PUT {{baseUrl}}/api/contacts/1/block
+Authorization: Bearer {{accessToken}}
+
+### Remove contact
 DELETE {{baseUrl}}/api/contacts/1
 Authorization: Bearer {{accessToken}}
 
-### Block contact (replace {contactId} with actual ID)
-PUT {{baseUrl}}/api/contacts/1/block
+### ========================================
+### GROUP MANAGEMENT TESTS
+### ========================================
+
+### Create group (User 1 creates group with User 2)
+POST {{baseUrl}}/api/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Test Group",
+  "description": "A test group for our chat app",
+  "initialMemberIds": [2]
+}
+
+### Create another group (User 1 creates private group)
+POST {{baseUrl}}/api/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Private Group",
+  "description": "Just for me"
+}
+
+### Get user groups (User 1)
+GET {{baseUrl}}/api/groups
+Authorization: Bearer {{accessToken}}
+
+### Get user groups (User 2)
+GET {{baseUrl}}/api/groups
+Authorization: Bearer {{user2Token}}
+
+### Get specific group details
+GET {{baseUrl}}/api/groups/1
+Authorization: Bearer {{accessToken}}
+
+### Get group members
+GET {{baseUrl}}/api/groups/1/members
+Authorization: Bearer {{accessToken}}
+
+### Update group details (only owner can do this)
+PUT {{baseUrl}}/api/groups/1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated Test Group",
+  "description": "Updated description for our test group"
+}
+
+### Add member to group (User 1 adds User 3 - but they need to be contacts first)
+POST {{baseUrl}}/api/groups/1/members/2
+Authorization: Bearer {{accessToken}}
+
+### Remove member from group (User 1 removes User 2)
+DELETE {{baseUrl}}/api/groups/1/members/2
+Authorization: Bearer {{accessToken}}
+
+### Leave group (User 2 leaves group)
+POST {{baseUrl}}/api/groups/1/leave
+Authorization: Bearer {{user2Token}}
+
+### Delete group (only owner can do this)
+DELETE {{baseUrl}}/api/groups/2
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### MESSAGING TESTS
+### ========================================
+
+### Send direct message (User 1 to User 2)
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Hello! This is a direct message.",
+  "type": 0
+}
+
+### Send direct message with attachment
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Check out this image!",
+  "type": "Image",
+  "attachmentUrl": "https://example.com/image.jpg"
+}
+
+### Send group message (User 1 to group)
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "content": "Hello everyone in the group!",
+  "type": 1
+}
+
+### Send group message (User 2 to group)
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{user2Token}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "content": "Hi there! Great to be in this group.",
+  "type": 1
+}
+
+### Get direct messages between User 1 and User 2
+GET {{baseUrl}}/api/messages/direct/2
+Authorization: Bearer {{accessToken}}
+
+### Get direct messages with pagination
+GET {{baseUrl}}/api/messages/direct/2?page=1&pageSize=10
+Authorization: Bearer {{accessToken}}
+
+### Get group messages
+GET {{baseUrl}}/api/messages/group/1
+Authorization: Bearer {{accessToken}}
+
+### Get group messages with pagination
+GET {{baseUrl}}/api/messages/group/1?page=1&pageSize=20
+Authorization: Bearer {{accessToken}}
+
+### Get all conversations (User 1)
+GET {{baseUrl}}/api/messages/conversations
+Authorization: Bearer {{accessToken}}
+
+### Get all conversations (User 2)
+GET {{baseUrl}}/api/messages/conversations
+Authorization: Bearer {{user2Token}}
+
+### Search messages
+GET {{baseUrl}}/api/messages/search?query=hello
+Authorization: Bearer {{accessToken}}
+
+### Search messages with specific term
+GET {{baseUrl}}/api/messages/search?query=group
+Authorization: Bearer {{accessToken}}
+
+### Delete message
+DELETE {{baseUrl}}/api/messages/1
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### ERROR TESTING SCENARIOS
+### ========================================
+
+### Try to send message to non-contact
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 3,
+  "content": "This should fail - we're not contacts",
+  "type": "Text"
+}
+
+### Try to send group message to group you're not in
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{user3Token}}
+Content-Type: application/json
+
+{
+  "groupId": 1,
+  "content": "This should fail - I'm not in this group",
+  "type": "Text"
+}
+
+### Try to add non-contact to group
+POST {{baseUrl}}/api/groups/1/members/3
+Authorization: Bearer {{accessToken}}
+
+### Try to update group as non-owner
+PUT {{baseUrl}}/api/groups/1
+Authorization: Bearer {{user2Token}}
+Content-Type: application/json
+
+{
+  "name": "This should fail",
+  "description": "Only owner can update"
+}
+
+### Try to delete group as non-owner
+DELETE {{baseUrl}}/api/groups/1
+Authorization: Bearer {{user2Token}}
+
+### Try to access group you're not member of
+GET {{baseUrl}}/api/groups/1
+Authorization: Bearer {{user3Token}}
+
+### Try to get messages from group you're not in
+GET {{baseUrl}}/api/messages/group/1
+Authorization: Bearer {{user3Token}}
+
+### Try to get direct messages with non-contact
+GET {{baseUrl}}/api/messages/direct/3
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### WORKFLOW TESTING SCENARIOS
+### ========================================
+
+### Complete Contact + Messaging Workflow
+# 1. User 1 sends invitation to User 3
+POST {{baseUrl}}/api/contacts/invite
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "username": "testuser3",
+  "message": "Let's connect for testing!"
+}
+
+# 2. User 3 accepts invitation
+PUT {{baseUrl}}/api/contacts/invitation/3/respond
+Authorization: Bearer {{user3Token}}
+Content-Type: application/json
+
+{
+  "accept": true
+}
+
+# 3. Now User 1 can send message to User 3
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 3,
+  "content": "Great! Now we can chat.",
+  "type": "Text"
+}
+
+# 4. User 3 replies
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{user3Token}}
+Content-Type: application/json
+
+{
+  "recipientId": 1,
+  "content": "Awesome! This messaging system works well.",
+  "type": "Text"
+}
+
+### Complete Group Workflow
+# 1. User 1 creates group with User 2 and User 3
+POST {{baseUrl}}/api/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Team Chat",
+  "description": "Our team communication group",
+  "initialMemberIds": [2, 3]
+}
+
+# 2. All members send messages
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "groupId": 3,
+  "content": "Welcome to our team chat!",
+  "type": "Text"
+}
+
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{user2Token}}
+Content-Type: application/json
+
+{
+  "groupId": 3,
+  "content": "Thanks for adding me!",
+  "type": "Text"
+}
+
+POST {{baseUrl}}/api/messages/group
+Authorization: Bearer {{user3Token}}
+Content-Type: application/json
+
+{
+  "groupId": 3,
+  "content": "Great to be part of the team!",
+  "type": "Text"
+}
+
+# 3. Check conversations for all users
+GET {{baseUrl}}/api/messages/conversations
+Authorization: Bearer {{accessToken}}
+
+GET {{baseUrl}}/api/messages/conversations
+Authorization: Bearer {{user2Token}}
+
+GET {{baseUrl}}/api/messages/conversations
+Authorization: Bearer {{user3Token}}
+
+### ========================================
+### PERFORMANCE TESTING
+### ========================================
+
+### Send multiple messages for pagination testing
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Message 1 for pagination test",
+  "type": "Text"
+}
+
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Message 2 for pagination test",
+  "type": "Text"
+}
+
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Message 3 for pagination test",
+  "type": "Text"
+}
+
+### Test pagination with different page sizes
+GET {{baseUrl}}/api/messages/direct/2?page=1&pageSize=2
+Authorization: Bearer {{accessToken}}
+
+GET {{baseUrl}}/api/messages/direct/2?page=2&pageSize=2
+Authorization: Bearer {{accessToken}}
+
+### ========================================
+### VALIDATION TESTING
+### ========================================
+
+### Test empty message content
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "",
+  "type": "Text"
+}
+
+### Test invalid message type
+POST {{baseUrl}}/api/messages/direct
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Test message",
+  "type": "InvalidType"
+}
+
+### Test invalid group name (too short)
+POST {{baseUrl}}/api/groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "This should fail"
+}
+
+### Test search with short query
+GET {{baseUrl}}/api/messages/search?query=a
+Authorization: Bearer {{accessToken}}
+
+### Test search with empty query
+GET {{baseUrl}}/api/messages/search?query=
 Authorization: Bearer {{accessToken}}
