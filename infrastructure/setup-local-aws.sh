@@ -3,13 +3,23 @@
 # Setup script for local Docker Compose with AWS credentials
 echo "🔧 Setting up local environment with AWS credentials..."
 
-# Check if AWS CLI is configured
-if ! aws sts get-caller-identity &> /dev/null; then
+# Check if AWS CLI is configured (try multiple methods for temporary credentials)
+echo "🔍 Checking AWS CLI configuration..."
+
+# First try to get caller identity
+if aws sts get-caller-identity &> /dev/null; then
+    echo "✅ AWS CLI is configured and working with STS"
+elif aws configure get aws_access_key_id &> /dev/null; then
+    echo "✅ AWS CLI has credentials configured"
+    echo "⚠️  Note: STS check failed (normal for some credential types)"
+else
     echo "❌ AWS CLI not configured. Please run 'aws configure' first."
+    echo "💡 Make sure you have set:"
+    echo "   - AWS Access Key ID"
+    echo "   - AWS Secret Access Key"
+    echo "   - Default region (us-east-1 recommended)"
     exit 1
 fi
-
-echo "✅ AWS CLI is configured"
 
 # Use existing environment variables if available, otherwise fall back to aws configure
 echo "📤 Using AWS credentials..."

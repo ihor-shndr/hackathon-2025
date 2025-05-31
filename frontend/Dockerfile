@@ -1,7 +1,7 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine
+# Multi-stage build for production
+# Stage 1: Build the React app
+FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
@@ -13,8 +13,22 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Expose port 3000
+# Build for production with API URL from build arg
+ARG REACT_APP_API_URL=http://localhost:8080
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+RUN npm run build
+
+# Stage 2: Serve with nginx
+FROM nginx:alpine
+
+# Copy built files from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 3000 (to match ECS configuration)
 EXPOSE 3000
 
-# Start the development server
-CMD ["npm", "start"] 
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

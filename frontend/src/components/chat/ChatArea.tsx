@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Conversation, Message } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import ImageUpload from './ImageUpload';
+import FormattingToolbar from './FormattingToolbar';
+import { FormattedText, formatText } from '../../utils/messageFormatter';
 
 interface ChatAreaProps {
   conversation: Conversation | null;
@@ -18,6 +20,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollToBottom();
@@ -46,15 +49,76 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     setTimeout(() => setError(null), 5000);
   };
 
-  const isImageUrl = (content: string): boolean => {
-    // Check for image file extensions
-    const hasImageExtension = /\.(jpg|jpeg|png|gif|webp)$/i.test(content);
-    // Check for our API image URLs (they start with /api/images/)
-    const isApiImageUrl = content.startsWith('/api/images/');
-    // Check for old S3 URLs (for backward compatibility)
-    const isS3Url = content.includes('amazonaws.com');
+  // Formatting functions
+  const handleBold = () => {
+    if (!inputRef.current) return;
     
-    return hasImageExtension || isApiImageUrl || isS3Url;
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    const result = formatText.bold(newMessage, start, end);
+    
+    setNewMessage(result.text);
+    
+    // Set cursor position after formatting
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(result.newCursorPos, result.newCursorPos);
+      }
+    }, 0);
+  };
+
+  const handleItalic = () => {
+    if (!inputRef.current) return;
+    
+    const start = inputRef.current.selectionStart || 0;
+    const end = inputRef.current.selectionEnd || 0;
+    const result = formatText.italic(newMessage, start, end);
+    
+    setNewMessage(result.text);
+    
+    // Set cursor position after formatting
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(result.newCursorPos, result.newCursorPos);
+      }
+    }, 0);
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    } else if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        handleBold();
+      } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        handleItalic();
+      }
+    }
+  };
+
+  const isImageUrl = (content: string): boolean => {
+    // Trim the content to handle any extra whitespace
+    const trimmedContent = content.trim();
+    
+    // Check for our API image URLs (they start with /api/images/)
+    const isApiImageUrl = trimmedContent.startsWith('/api/images/');
+    
+    // Check for image file extensions in URLs
+    const hasImageExtension = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(trimmedContent);
+    
+    // Check for S3 URLs (for backward compatibility)
+    const isS3Url = trimmedContent.includes('amazonaws.com') && hasImageExtension;
+    
+    // Check for other common image hosting patterns
+    const isImageHost = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(trimmedContent);
+    
+    return isApiImageUrl || isS3Url || isImageHost;
   };
 
   const formatMessageTime = (sentAt: string) => {
@@ -199,7 +263,10 @@ const ChatArea: React.FC<ChatAreaProps> = ({
                         </p>
                       </div>
                     ) : (
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <FormattedText 
+                        content={message.content} 
+                        className="text-sm leading-relaxed"
+                      />
                     )}
                     <p className={`text-xs mt-2 ${
                       isCurrentUser ? 'text-blue-100' : 'text-gray-500'
@@ -222,6 +289,16 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             {error}
           </div>
         )}
+        
+        {/* Formatting Toolbar */}
+        <div className="mb-3">
+          <FormattingToolbar 
+            onBold={handleBold}
+            onItalic={handleItalic}
+            disabled={!conversation}
+          />
+        </div>
+        
         <div className="flex items-center" style={{ gap: '12px' }}>
           <ImageUpload 
             onImageUploaded={handleImageUploaded}
@@ -229,17 +306,13 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             disabled={false}
           />
           <input
+            ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={`Message ${conversation.name}...`}
             className="flex-1 px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
+            onKeyDown={handleKeyDown}
           />
           <button
             type="button"

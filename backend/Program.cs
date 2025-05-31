@@ -18,6 +18,11 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 
+// Add health checks
+builder.Services.AddHealthChecks();
+builder.Services
+    .AddDbContext<ChatDbContext>();
+
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -32,20 +37,42 @@ builder.Services.AddCorsPolicy(builder.Configuration);
 
 var app = builder.Build();
 
-// Apply migrations
+// Apply migrations with retry logic
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var context = services.GetRequiredService<ChatDbContext>();
+    
+    var maxRetries = 10;
+    var delay = TimeSpan.FromSeconds(3);
+    
+    for (int i = 0; i < maxRetries; i++)
     {
-        var context = services.GetRequiredService<ChatDbContext>();
-        context.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
-        throw;
+        try
+        {
+            logger.LogInformation("Attempting to connect to database (attempt {Attempt}/{MaxRetries})", i + 1, maxRetries);
+            await context.Database.CanConnectAsync();
+            logger.LogInformation("Successfully connected to database");
+            
+            logger.LogInformation("Applying database migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations completed successfully");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Database connection attempt {Attempt}/{MaxRetries} failed", i + 1, maxRetries);
+            
+            if (i == maxRetries - 1)
+            {
+                logger.LogError(ex, "Failed to connect to database after {MaxRetries} attempts", maxRetries);
+                throw;
+            }
+            
+            logger.LogInformation("Waiting {Delay} seconds before next attempt...", delay.TotalSeconds);
+            await Task.Delay(delay);
+        }
     }
 }
 
@@ -55,7 +82,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection in development or when explicitly configured
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("ForceHttpsRedirection"))
+{
+    app.UseHttpsRedirection();
+}
 
 // Use CORS
 app.UseCors("ChatAppPolicy");
@@ -63,6 +94,9 @@ app.UseCors("ChatAppPolicy");
 // Use authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add health check endpoint
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 
