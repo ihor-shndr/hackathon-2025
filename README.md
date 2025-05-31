@@ -1,251 +1,124 @@
-# MyChat - Real-time Chat Application
+# MyChat Application
 
-A modern chat application built with .NET C# backend and React TypeScript frontend.
-
-## Features
-
-### Current Implementation ✅
-- **User Authentication**: Register and login with JWT tokens
-- **Input Validation**: Form validation with error handling
-- **Raw Password Storage**: Simple password storage (as requested for hackathon)
-- **PostgreSQL Database**: User data persistence
-- **RESTful API**: Clean API design with proper HTTP status codes
-- **CORS Configuration**: Ready for frontend integration
-
-### Planned Features 🚧
-- Real-time messaging with SignalR
-- 1-on-1 conversations
-- Group chats (up to 300 participants)
-- Contact management
-- Image sharing
-- Message search
-- Message reactions
+A real-time chat application built with .NET Core backend and React TypeScript frontend.
 
 ## Quick Start
 
-### Prerequisites
-- .NET 8 SDK
-- PostgreSQL database
-- Node.js 18+ (for frontend)
+### Option 1: Docker Compose (Recommended)
 
-### Backend Setup
+Run the entire application stack (frontend, backend, and database) with one command:
 
-1. **Clone and navigate to backend**:
 ```bash
-git clone <repository>
-cd hackathon-2025/backend
+# Navigate to infrastructure directory
+cd infrastructure
+
+# Start all services
+./start.sh
+# or manually:
+# docker-compose up --build
+
+# Stop all services
+./stop.sh
+# or manually:
+# docker-compose down
 ```
 
-2. **Install dependencies**:
-```bash
-dotnet restore
-```
+After starting, the application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **Database**: localhost:5432
 
-3. **Configure database connection**:
-   Update `appsettings.json` with your PostgreSQL connection string:
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=mychat;Username=postgres;Password=your_password"
-  }
-}
-```
+### Option 2: Manual Setup
 
-4. **Run database migrations**:
-```bash
-dotnet ef database update
-```
+If you prefer to run services individually:
 
-5. **Run the application**:
-```bash
-dotnet run
-```
+1. **Start the database**:
+   ```bash
+   cd infrastructure
+   docker-compose up db
+   ```
 
-The API will be available at `https://localhost:5001`
+2. **Start the backend**:
+   ```bash
+   cd backend
+   dotnet run
+   ```
 
-### API Endpoints
-
-#### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/check-username/{username}` - Check username availability
-
-#### Request/Response Examples
-
-**Register**:
-```bash
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "username": "john_doe",
-  "password": "password123",
-  "confirmPassword": "password123"
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": 1,
-      "username": "john_doe",
-      "createdAt": "2025-05-31T10:00:00Z"
-    }
-  },
-  "errors": []
-}
-```
-
-**Login**:
-```bash
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "username": "john_doe",
-  "password": "password123"
-}
-```
+3. **Start the frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
 ## Project Structure
 
 ```
-backend/
-├── Controllers/          # API controllers
-│   └── AuthController.cs
-├── Entities/            # Database entities
-│   └── User.cs
-├── Models/DTOs/         # Data Transfer Objects
-│   ├── Auth/
-│   └── Common/
-├── Services/            # Business logic services
-│   ├── IAuthService.cs
-│   ├── AuthService.cs
-│   ├── IJwtService.cs
-│   └── JwtService.cs
-├── Data/               # Database context
-│   └── ChatDbContext.cs
-├── Configuration/      # Configuration models
-│   └── JwtSettings.cs
-├── Extensions/         # Service extensions
-│   └── ServiceCollectionExtensions.cs
-├── Migrations/         # EF Core migrations
-└── Program.cs          # Application entry point
+├── backend/            # .NET Core API
+├── frontend/          # React TypeScript app
+├── infrastructure/    # Docker configuration
+└── memory-bank/       # Project documentation
 ```
 
-## Technology Stack
+## Features
 
-### Backend
-- **Framework**: ASP.NET Core 9.0
-- **Language**: C#
-- **Database**: PostgreSQL with Entity Framework Core
-- **Authentication**: JWT Bearer tokens
-- **Real-time**: SignalR (planned)
+- **Real-time Chat**: Direct and group messaging
+- **User Authentication**: Secure login/register
+- **Contact Management**: Add and manage contacts
+- **Group Management**: Create and manage group chats
+- **Responsive Design**: Works on desktop and mobile
 
-### Frontend (Planned)
-- **Framework**: React 18
-- **Language**: TypeScript
-- **State Management**: React Context/Redux
-- **Real-time**: SignalR JavaScript client
-- **Styling**: Tailwind CSS or styled-components
+## Tech Stack
+
+- **Backend**: .NET Core 8, Entity Framework, PostgreSQL
+- **Frontend**: React 18, TypeScript, Tailwind CSS
+- **Database**: PostgreSQL 16
+- **Infrastructure**: Docker, Docker Compose
 
 ## Development
 
-### Build Commands
-```bash
-# Restore dependencies
-dotnet restore
+### Prerequisites
 
-# Build project
-dotnet build
+- Docker and Docker Compose
+- Node.js 18+ (for local frontend development)
+- .NET 8 SDK (for local backend development)
 
-# Run application
-dotnet run
+### Running in Development Mode
 
-# Run with hot reload
-dotnet watch run
-```
+The Docker Compose setup includes volume mounts for hot reloading:
 
-### Database Commands
-```bash
-# Add migration
-dotnet ef migrations add <MigrationName>
+- Frontend code changes will automatically refresh the browser
+- Backend changes require rebuilding the container
 
-# Update database
-dotnet ef database update
+### Database Access
 
-# Remove last migration
-dotnet ef migrations remove
-```
+The PostgreSQL database is accessible at `localhost:5432` with:
+- **Database**: mychat
+- **Username**: postgres
+- **Password**: postgres
 
-## Security Features
+### Environment Variables
 
-- **JWT Authentication**: Secure token-based authentication
-- **Input Validation**: Server-side validation with data annotations
-- **CORS Policy**: Configured for frontend integration
-- **Raw Password Storage**: Simplified for hackathon (not for production)
+The application uses the following key environment variables:
 
-## Environment Variables
+- `REACT_APP_API_URL`: Frontend API URL (default: http://localhost:8080)
+- `ConnectionStrings__DefaultConnection`: Database connection string
+- `ASPNETCORE_ENVIRONMENT`: Backend environment (Development/Production)
 
-Configure the following in `appsettings.json`:
+## Troubleshooting
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Your PostgreSQL connection string"
-  },
-  "JwtSettings": {
-    "SecretKey": "Your JWT secret key (minimum 32 characters)",
-    "Issuer": "MyChat",
-    "Audience": "MyChat",
-    "ExpiryInMinutes": 1440
-  },
-  "Cors": {
-    "AllowedOrigins": ["http://localhost:3000"]
-  }
-}
-```
-
-## Testing the API
-
-You can test the API using tools like Postman, curl, or the included Swagger UI (available in development mode at `/swagger`).
-
-Example curl commands:
-
-```bash
-# Register a new user
-curl -X POST https://localhost:5001/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"password123","confirmPassword":"password123"}'
-
-# Login
-curl -X POST https://localhost:5001/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"password123"}'
-
-# Check username availability
-curl https://localhost:5001/api/auth/check-username/testuser
-```
-
-## Next Steps
-
-1. **Frontend Development**: React TypeScript application
-2. **Real-time Messaging**: SignalR hub implementation
-3. **Message Persistence**: Message entity and service
-4. **Contact Management**: Friend/contact system
-5. **Group Chats**: Multi-user conversation support
-6. **File Upload**: Image sharing functionality
-7. **Deployment**: Docker containerization and cloud deployment
+1. **Port conflicts**: Ensure ports 3000, 8080, and 5432 are available
+2. **Docker issues**: Try `docker-compose down -v` to reset volumes
+3. **Database connection**: Wait for the database health check to pass
 
 ## Contributing
 
-This is a hackathon project. Focus on core functionality and rapid development.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## License
 
-This project is created for hackathon purposes.
+This project is licensed under the MIT License.

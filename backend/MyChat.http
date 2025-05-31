@@ -223,7 +223,7 @@ Content-Type: application/json
 {
   "recipientId": 2,
   "content": "Hello! This is a direct message.",
-  "type": 0
+  "type": "Text"
 }
 
 ### Send direct message with attachment
