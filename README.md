@@ -1,6 +1,6 @@
 # MyChat - Real-time Chat Application
 
-A complete Skype-like chat application built for the DataArt hackathon contest, featuring real-time messaging, group chats, and user management.
+A complete chat application built for the hackathon contest, featuring real-time messaging, group chats, and user management.
 
 ## 🚀 Quick Start
 

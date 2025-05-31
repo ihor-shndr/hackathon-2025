@@ -124,7 +124,7 @@ resource "aws_s3_bucket_public_access_block" "images_pab" {
   restrict_public_buckets = true
 }
 
-# Security Group for Load Balancer
+# Security Group - Allow HTTP, HTTPS, and Backend API traffic to ALB
 resource "aws_security_group" "alb" {
   name_prefix = "${var.app_name}-alb-"
   vpc_id      = data.aws_vpc.main.id
@@ -142,6 +142,14 @@ resource "aws_security_group" "alb" {
     protocol    = "tcp"
     from_port   = 443
     to_port     = 443
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Backend API access from internet
+  ingress {
+    protocol    = "tcp"
+    from_port   = 8080
+    to_port     = 8080
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -472,8 +480,8 @@ resource "aws_ecs_task_definition" "app" {
   family                   = "${var.app_name}"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = 2048
+  memory                   = 4096
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn           = aws_iam_role.ecs_task_role.arn
 

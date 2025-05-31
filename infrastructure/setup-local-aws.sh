@@ -44,7 +44,7 @@ else
 fi
 
 # Set S3 bucket name (you can change this to your actual bucket)
-export AWS_S3_BUCKET_NAME="mychat-app-images-niyvopib"
+export AWS_S3_BUCKET_NAME="mychat-app-images-gcnki0fq"
 # Force us-east-1 region for the existing bucket (LocationConstraint: null = us-east-1)
 export AWS_S3_REGION="us-east-1"
 # Also export in the format expected by .NET configuration

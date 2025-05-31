@@ -30,7 +30,8 @@ export class SignalRService {
           const token = localStorage.getItem('accessToken');
           console.log('SignalR: Getting token for connection:', !!token);
           return token || '';
-        }
+        },
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext: signalR.RetryContext) => {

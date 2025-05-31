@@ -1,0 +1,11 @@
+# AWS Region
+aws_region = "us-east-1"
+
+# Application name
+app_name = "mychat-app"
+
+# Database password (change this to a secure password)
+db_password = "CHANGE_ME_TO_SECURE_PASSWORD"
+
+# JWT secret key (change this to a secure random string at least 32 characters)
+jwt_secret = "CHANGE_ME_TO_SECURE_JWT_SECRET_AT_LEAST_32_CHARS" 
