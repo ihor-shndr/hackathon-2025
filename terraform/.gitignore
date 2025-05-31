@@ -1,0 +1,36 @@
+# Terraform files to exclude from version control
+
+# State files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which might contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform directories
+.terraform/
+.terraform.lock.hcl
+
+# Plan files
+*.tfplan
+tfplan
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Local environment files
+.env
+.env.local 

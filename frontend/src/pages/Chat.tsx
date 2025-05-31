@@ -300,14 +300,14 @@ const Chat: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex bg-slate-100">
+    <div className="h-screen flex bg-gray-100">
       {/* Sidebar - Fixed Width */}
-      <div className="bg-slate-50 border-r border-slate-200 flex flex-col" style={{ width: '384px', minWidth: '384px', maxWidth: '384px' }}>
-        <div className="px-6 py-4 border-b border-slate-200 bg-white">
+      <div className="bg-white border-r border-gray-200 flex flex-col" style={{ width: '384px', minWidth: '384px', maxWidth: '384px' }}>
+        <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-800">MyChat</h1>
+            <h1 className="text-xl font-semibold text-gray-800">MyChat</h1>
             <div className="flex items-center" style={{ gap: '12px' }}>
-              <span className="text-sm text-slate-600 px-3 py-2 bg-slate-100 rounded-lg font-medium whitespace-nowrap">
+              <span className="text-sm text-gray-600 px-3 py-2 bg-gray-50 rounded-lg font-medium whitespace-nowrap">
                 Welcome, {user?.username}
               </span>
               
@@ -316,8 +316,8 @@ const Chat: React.FC = () => {
                 onClick={() => setShowContactPanel(!showContactPanel)}
                 className={`p-2.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
                   showContactPanel 
-                    ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' 
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-700'
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-700'
                 }`}
                 title="Manage Contacts"
               >
@@ -330,7 +330,7 @@ const Chat: React.FC = () => {
               {/* Logout button */}
               <button
                 onClick={logout}
-                className="p-2.5 rounded-lg hover:bg-red-50 transition-all duration-200 text-slate-500 hover:text-red-600 flex items-center"
+                className="p-2.5 rounded-lg hover:bg-red-50 transition-all duration-200 text-gray-500 hover:text-red-600 flex items-center"
                 title="Logout"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

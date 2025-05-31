@@ -1,4 +1,5 @@
 using System.Text;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,7 +19,49 @@ public static class ServiceCollectionExtensions
 
         // Add JWT settings
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        
+        // Add AWS settings
+        services.Configure<AwsSettings>(configuration.GetSection("AWS"));
 
+        // Add AWS S3 client
+        services.AddSingleton<IAmazonS3>(provider =>
+        {
+            var awsSettings = configuration.GetSection("AWS").Get<AwsSettings>();
+            var config = new Amazon.S3.AmazonS3Config
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsSettings?.S3?.Region ?? "us-east-1")
+            };
+            
+            // Check for environment variables first (Docker Compose)
+            var envAccessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
+            var envSecretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+            
+            if (!string.IsNullOrEmpty(envAccessKey) && !string.IsNullOrEmpty(envSecretKey))
+            {
+                // Docker Compose or environment variables
+                var sessionToken = Environment.GetEnvironmentVariable("AWS_SESSION_TOKEN");
+                if (!string.IsNullOrEmpty(sessionToken))
+                {
+                    return new Amazon.S3.AmazonS3Client(envAccessKey, envSecretKey, sessionToken, config);
+                }
+                else
+                {
+                    return new Amazon.S3.AmazonS3Client(envAccessKey, envSecretKey, config);
+                }
+            }
+            // Fallback to config file credentials
+            else if (!string.IsNullOrEmpty(awsSettings?.S3?.AccessKey) && !string.IsNullOrEmpty(awsSettings?.S3?.SecretKey))
+            {
+                // Local development with explicit credentials in config
+                return new Amazon.S3.AmazonS3Client(awsSettings.S3.AccessKey, awsSettings.S3.SecretKey, config);
+            }
+            else
+            {
+                // Production/ECS - use IAM roles or default credential chain
+                return new Amazon.S3.AmazonS3Client(config);
+            }
+        });
+        
         // Add services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
@@ -26,6 +69,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IMessageService, MessageService>();
         services.AddScoped<ISignalRService, SignalRService>();
+        services.AddScoped<IImageStorageService, S3ImageStorageService>();
 
         return services;
     }

@@ -133,4 +133,17 @@ export const messagesAPI = {
     api.delete(`/messages/${id}`),
 };
 
-export default api; 
+// Images API
+export const imagesAPI = {
+  uploadImage: (file: File): Promise<AxiosResponse<string>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/images/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+export default api;
