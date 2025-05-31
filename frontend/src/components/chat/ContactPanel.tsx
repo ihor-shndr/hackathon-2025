@@ -7,6 +7,8 @@ interface ContactPanelProps {
   groups: Group[];
   onClose: () => void;
   onDataUpdate: () => void;
+  onStartDirectChat?: (contact: Contact) => void;
+  onStartGroupChat?: (group: Group) => void;
 }
 
 type ActiveTab = 'contacts' | 'groups' | 'invitations';
@@ -15,7 +17,9 @@ const ContactPanel: React.FC<ContactPanelProps> = ({
   contacts,
   groups,
   onClose,
-  onDataUpdate
+  onDataUpdate,
+  onStartDirectChat,
+  onStartGroupChat
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('contacts');
   const [searchQuery, setSearchQuery] = useState('');
@@ -223,11 +227,20 @@ const ContactPanel: React.FC<ContactPanelProps> = ({
           ) : (
             contacts.map((contact) => (
               <div key={contact.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                <div className="flex items-center space-x-2">
+                <div 
+                  className="flex items-center space-x-2 flex-1 cursor-pointer"
+                  onClick={() => {
+                    if (onStartDirectChat) {
+                      onStartDirectChat(contact);
+                      onClose(); // Close the contact panel after starting chat
+                    }
+                  }}
+                >
                   <div className={`w-2 h-2 rounded-full ${
                     contact.status === ContactStatus.Accepted ? 'bg-green-500' : 'bg-gray-400'
                   }`} />
                   <span className="text-sm">{contact.user.username}</span>
+                  <span className="text-xs text-blue-600 ml-2">Click to chat</span>
                 </div>
                 <button className="text-xs text-red-600 hover:text-red-800">Remove</button>
               </div>
@@ -502,4 +515,4 @@ const ContactPanel: React.FC<ContactPanelProps> = ({
   );
 };
 
-export default ContactPanel; 
+export default ContactPanel;

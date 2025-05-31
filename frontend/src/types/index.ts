@@ -90,8 +90,8 @@ export interface CreateGroupData {
 // Message types - Updated to use string enums instead of magic numbers
 export type MessageType = 'Text' | 'Image' | 'File' | 'Audio' | 'Video';
 
-// Conversation types - Updated to use string enums instead of magic numbers
-export type ConversationType = 'direct' | 'group';
+// Conversation types - Match backend enum values
+export type ConversationType = 'Direct' | 'Group';
 
 export interface Message {
   id: number;
@@ -170,4 +170,4 @@ export interface ChatState {
   contacts: Contact[];
   groups: Group[];
   invitations: ContactInvitation[];
-} 
+}

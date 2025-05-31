@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IContactService, ContactService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IMessageService, MessageService>();
+        services.AddScoped<ISignalRService, SignalRService>();
 
         return services;
     }
@@ -57,6 +58,24 @@ public static class ServiceCollectionExtensions
                 ValidAudience = jwtSettings.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.Zero
+            };
+            
+            // Configure JWT for SignalR
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    
+                    // If the request is for our SignalR hub...
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chathub"))
+                    {
+                        // Read the token out of the query string
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
 

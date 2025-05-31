@@ -28,14 +28,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   const filteredConversations = conversations.filter(conversation => {
     const matchesSearch = conversation.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === 'all' || 
-      (activeTab === 'direct' && conversation.type === 'direct') ||
-      (activeTab === 'groups' && conversation.type === 'group');
+      (activeTab === 'direct' && conversation.type === 'Direct') ||
+      (activeTab === 'groups' && conversation.type === 'Group');
     return matchesSearch && matchesTab;
   });
 
   // Find groups that don't have conversations yet
   const availableGroups = groups.filter(group => 
-    !conversations.some(conv => conv.type === 'group' && conv.groupId === group.id)
+    !conversations.some(conv => conv.type === 'Group' && conv.groupId === group.id)
+  );
+
+  // Find contacts that don't have conversations yet
+  const availableContacts = contacts.filter(contact => 
+    !conversations.some(conv => conv.type === 'Direct' && conv.contactId === contact.user.id)
   );
 
   const formatTime = (timestamp: string) => {
@@ -64,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     // Create a conversation object for the group
     const groupConversation: Conversation = {
       id: group.id,
-      type: 'group', // Backend enum: 'group' = Group
+      type: 'Group', // Backend enum: 'Group' = Group
       name: group.name,
       unreadCount: 0,
       lastActivity: new Date().toISOString(),
@@ -77,39 +82,58 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const handleContactClick = (contact: Contact) => {
+    // Create a conversation object for the contact
+    const directConversation: Conversation = {
+      id: contact.user.id, // Use the actual user ID, not contact record ID
+      type: 'Direct', // Backend enum: 'Direct' = Direct
+      name: contact.user.username,
+      unreadCount: 0,
+      lastActivity: new Date().toISOString(),
+      contactId: contact.user.id // This should be the user ID for API calls
+    };
+    onConversationSelect(directConversation);
+    if (onStartDirectChat) {
+      onStartDirectChat(contact);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200" style={{ gap: '2px' }}>
         <button
           onClick={() => setActiveTab('all')}
-          className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 px-4 py-4 text-sm font-medium transition-colors ${
             activeTab === 'all' 
               ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
               : 'text-gray-500 hover:text-gray-700'
           }`}
+          style={{ marginRight: '1px' }}
         >
           All ({conversations.length})
         </button>
         <button
           onClick={() => setActiveTab('direct')}
-          className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 px-4 py-4 text-sm font-medium transition-colors ${
             activeTab === 'direct' 
               ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
               : 'text-gray-500 hover:text-gray-700'
           }`}
+          style={{ marginLeft: '1px', marginRight: '1px' }}
         >
-          Direct ({conversations.filter(c => c.type === 'direct').length})
+          Direct ({conversations.filter(c => c.type === 'Direct').length})
         </button>
         <button
           onClick={() => setActiveTab('groups')}
-          className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 px-4 py-4 text-sm font-medium transition-colors ${
             activeTab === 'groups' 
               ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' 
               : 'text-gray-500 hover:text-gray-700'
           }`}
+          style={{ marginLeft: '1px' }}
         >
-          Groups ({conversations.filter(c => c.type === 'group').length + availableGroups.length})
+          Groups ({conversations.filter(c => c.type === 'Group').length + availableGroups.length})
         </button>
       </div>
 
@@ -133,6 +157,34 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
+        {/* Available Contacts (only show in direct tab and if there are any) */}
+        {activeTab === 'direct' && availableContacts.length > 0 && (
+          <>
+            <div className="p-4 bg-gray-50">
+              <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                Start Direct Chat
+              </h4>
+              {availableContacts.map((contact) => (
+                <div
+                  key={`contact-${contact.id}`}
+                  onClick={() => handleContactClick(contact)}
+                  className="p-3 mb-2 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{contact.user.username}</h3>
+                      <span className="text-xs text-blue-600 font-medium">Click to start messaging</span>
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      {contact.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         {/* Available Groups (only show in groups tab and if there are any) */}
         {activeTab === 'groups' && availableGroups.length > 0 && (
           <>
@@ -208,11 +260,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
               <div className="flex items-center mt-1">
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  conversation.type === 'group' 
+                  conversation.type === 'Group' 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-blue-100 text-blue-800'
                 }`}>
-                  {conversation.type === 'group' ? 'Group' : 'Direct'} {/* 'group' = Group */}
+                  {conversation.type === 'Group' ? 'Group' : 'Direct'} {/* 'Group' = Group */}
                 </span>
               </div>
             </div>
@@ -223,4 +275,4 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 };
 
-export default Sidebar; 
+export default Sidebar;

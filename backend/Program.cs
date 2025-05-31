@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using MyChat.Data;
 using MyChat.Extensions;
+using MyChat.Hubs;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddOpenApi();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Add application services
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -60,5 +65,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hub
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();

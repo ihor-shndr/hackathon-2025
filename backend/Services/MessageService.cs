@@ -11,11 +11,13 @@ public class MessageService : IMessageService
 {
     private readonly ChatDbContext _context;
     private readonly IContactService _contactService;
+    private readonly ISignalRService _signalRService;
 
-    public MessageService(ChatDbContext context, IContactService contactService)
+    public MessageService(ChatDbContext context, IContactService contactService, ISignalRService signalRService)
     {
         _context = context;
         _contactService = contactService;
+        _signalRService = signalRService;
     }
 
     public async Task<ApiResponse<MessageDto>> SendDirectMessageAsync(SendDirectMessageDto request, int senderId)
@@ -43,6 +45,13 @@ public class MessageService : IMessageService
             await _context.SaveChangesAsync();
 
             var messageDto = await GetMessageDtoAsync(message.Id, senderId);
+            
+            // Broadcast message via SignalR
+            if (messageDto != null)
+            {
+                await _signalRService.SendDirectMessageAsync(senderId, request.RecipientId, messageDto);
+            }
+            
             return ApiResponse<MessageDto>.SuccessResponse(messageDto!);
         }
         catch (Exception ex)
@@ -78,6 +87,13 @@ public class MessageService : IMessageService
             await _context.SaveChangesAsync();
 
             var messageDto = await GetMessageDtoAsync(message.Id, senderId);
+            
+            // Broadcast message via SignalR
+            if (messageDto != null)
+            {
+                await _signalRService.SendGroupMessageAsync(senderId, request.GroupId, messageDto);
+            }
+            
             return ApiResponse<MessageDto>.SuccessResponse(messageDto!);
         }
         catch (Exception ex)
