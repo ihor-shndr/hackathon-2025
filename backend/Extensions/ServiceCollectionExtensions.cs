@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         // Add services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IContactService, ContactService>();
 
         return services;
     }

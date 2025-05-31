@@ -10,6 +10,7 @@ public class ChatDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Contact> Contacts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +24,34 @@ public class ChatDbContext : DbContext
             entity.Property(e => e.Username).HasMaxLength(255).IsRequired();
             entity.Property(e => e.Password).HasMaxLength(255).IsRequired();
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
+        // Configure Contact entity
+        modelBuilder.Entity<Contact>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            // Foreign key relationships
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ContactUser)
+                  .WithMany()
+                  .HasForeignKey(e => e.ContactUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes for performance
+            entity.HasIndex(e => new { e.UserId, e.ContactUserId }).IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.Status });
+            entity.HasIndex(e => new { e.ContactUserId, e.Status });
+
+            // Property configurations
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.Message).HasMaxLength(500);
+
         });
     }
 }

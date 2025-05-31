@@ -1,6 +1,77 @@
-@MyChat_HostAddress = http://localhost:5163
+@baseUrl = http://localhost:8080
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwidW5pcXVlX25hbWUiOiJ0ZXN0dXNlcjIiLCJqdGkiOiI1Nzg2Y2RjNS1iMjg5LTRhZjItOGMwMy01ZTE4YzllMzhiMmUiLCJpYXQiOjE3NDg2Nzg2NzAsImV4cCI6MTc0ODc2NTA3MCwiaXNzIjoiTXlDaGF0IiwiYXVkIjoiTXlDaGF0In0.ZMDRekH9Rzn1NkT8_5ivm9SMmKMIoZKqPECCwzgzVa4
 
-GET {{MyChat_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
 
-###
+{
+  "username": "testuser1",
+  "password": "Password123!",
+  "confirmPassword": "Password123!"
+}
+
+### Register another user for testing contacts
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser2",
+  "password": "Password123!",
+  "confirmPassword": "Password123!"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser2",
+  "password": "Password123!"
+}
+
+### Check username availability
+GET {{baseUrl}}/api/auth/check-username/testuser3
+
+### Send contact invitation
+POST {{baseUrl}}/api/contacts/invite
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "username": "testuser2",
+  "message": "Let's be contacts!"
+}
+
+### Get contacts list
+GET {{baseUrl}}/api/contacts
+Authorization: Bearer {{accessToken}}
+
+### Get pending invitations (received)
+GET {{baseUrl}}/api/contacts/invitations
+Authorization: Bearer {{accessToken}}
+
+### Get sent invitations
+GET {{baseUrl}}/api/contacts/invitations/sent
+Authorization: Bearer {{accessToken}}
+
+### Accept invitation (replace {invitationId} with actual ID)
+PUT {{baseUrl}}/api/contacts/invitation/1/respond
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "accept": true
+}
+
+### Search users
+GET {{baseUrl}}/api/contacts/search?query=test
+Authorization: Bearer {{accessToken}}
+
+### Remove contact (replace {contactId} with actual ID)
+DELETE {{baseUrl}}/api/contacts/1
+Authorization: Bearer {{accessToken}}
+
+### Block contact (replace {contactId} with actual ID)
+PUT {{baseUrl}}/api/contacts/1/block
+Authorization: Bearer {{accessToken}}
